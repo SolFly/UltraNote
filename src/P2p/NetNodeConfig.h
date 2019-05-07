@@ -1,7 +1,7 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2014-2017 XDN developers
 // Copyright (c) 2016-2017 BXC developers
-// Copyright (c) 2017 UltraNote developers
+// Copyright (c) 2017-2019 UltraNote developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -28,6 +28,7 @@ public:
   uint16_t getBindPort() const;
   uint16_t getExternalPort() const;
   bool getAllowLocalIp() const;
+  std::string getRefuseOutdated() const;
   std::vector<PeerlistEntry> getPeers() const;
   std::vector<NetworkAddress> getPriorityNodes() const;
   std::vector<NetworkAddress> getExclusiveNodes() const;
@@ -41,12 +42,14 @@ public:
   void setBindPort(uint16_t port);
   void setExternalPort(uint16_t port);
   void setAllowLocalIp(bool allow);
+  void setRefuseOutdated(std::string& nodeVersion);
   void setPeers(const std::vector<PeerlistEntry>& peerList);
   void setPriorityNodes(const std::vector<NetworkAddress>& addresses);
   void setExclusiveNodes(const std::vector<NetworkAddress>& addresses);
   void setSeedNodes(const std::vector<NetworkAddress>& addresses);
   void setHideMyPort(bool hide);
   void setConfigFolder(const std::string& folder);
+  std::string refuseOutdated;
 
 private:
   std::string bindIp;
