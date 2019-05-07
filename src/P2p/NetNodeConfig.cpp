@@ -29,8 +29,8 @@ const command_line::arg_descriptor<std::vector<std::string> > arg_p2p_add_exclus
       " If this option is given the options add-priority-node and seed-node are ignored"};
 const command_line::arg_descriptor<std::vector<std::string> > arg_p2p_seed_node   = {"seed-node", "Connect to a node to retrieve peer addresses, and disconnect"};
 const command_line::arg_descriptor<bool> arg_p2p_hide_my_port   =    {"hide-my-port", "Do not announce yourself as peerlist candidate", false, true};
-const command_line::arg_descriptor<std::string> arg_p2p_refuse_outdated = {"refuse-outdated", "Refuse connections from peers whose daemon version is below the specified version"};
-      
+const command_line::arg_descriptor<std::string> arg_p2p_refuse_outdated = {"refuse-outdated", "Refuse connections from nodes not running the specified version (specify version as 1.0.13, etc...)"};      
+
 bool parsePeerFromString(NetworkAddress& pe, const std::string& node_addr) {
   return Common::parseIpAddressAndPort(pe.ip, pe.port, node_addr);
 }
