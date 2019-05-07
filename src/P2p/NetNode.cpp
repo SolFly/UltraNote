@@ -1,7 +1,7 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2014-2017 XDN developers
 // Copyright (c) 2016-2017 BXC developers
-// Copyright (c) 2017 UltraNote developers
+// Copyright (c) 2017-2019 UltraNote developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,7 +26,7 @@
 #include <System/Ipv4Resolver.h>
 #include <System/TcpListener.h>
 #include <System/TcpConnector.h>
- 
+
 #include "version.h"
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
@@ -41,7 +41,7 @@
 #include "Serialization/BinaryOutputStreamSerializer.h"
 #include "Serialization/SerializationOverloads.h"
 
-//#include "Common/StringTools.h"
+#include "Common/StringTools.h"
 
 using namespace Common;
 using namespace Logging;
@@ -113,7 +113,7 @@ namespace CryptoNote
                                                                                                   " If this option is given the options add-priority-node and seed-node are ignored"};
     const command_line::arg_descriptor<std::vector<std::string> > arg_p2p_seed_node   = {"seed-node", "Connect to a node to retrieve peer addresses, and disconnect"};
     const command_line::arg_descriptor<bool> arg_p2p_hide_my_port   =    {"hide-my-port", "Do not announce yourself as peerlist candidate", false, true};
-
+    const command_line::arg_descriptor<std::string> arg_p2p_refuse_outdated = {"refuse-outdated", "Refuse connections from nodes that are not running the specified version. (specify version 1.0.13, etc...)"};
     std::string print_peerlist_to_string(const std::list<PeerlistEntry>& pl) {
       time_t now_time = 0;
       time(&now_time);
@@ -267,8 +267,9 @@ namespace CryptoNote
     command_line::add_arg(desc, arg_p2p_add_peer);
     command_line::add_arg(desc, arg_p2p_add_priority_node);
     command_line::add_arg(desc, arg_p2p_add_exclusive_node);
-    command_line::add_arg(desc, arg_p2p_seed_node);    
+    command_line::add_arg(desc, arg_p2p_seed_node);
     command_line::add_arg(desc, arg_p2p_hide_my_port);
+    command_line::add_arg(desc, arg_p2p_refuse_outdated);
   }
   //-----------------------------------------------------------------------------------
   
@@ -341,9 +342,10 @@ namespace CryptoNote
     m_port = command_line::get_arg(vm, arg_p2p_bind_port);
     m_external_port = command_line::get_arg(vm, arg_p2p_external_port);
     m_allow_local_ip = command_line::get_arg(vm, arg_p2p_allow_local_ip);
+    m_node_version = command_line::get_arg(vm, arg_p2p_refuse_outdated);
 
     if (command_line::has_arg(vm, arg_p2p_add_peer))
-    {       
+    {
       std::vector<std::string> perrs = command_line::get_arg(vm, arg_p2p_add_peer);
       for(const std::string& pr_str: perrs)
       {
@@ -380,6 +382,7 @@ namespace CryptoNote
     m_port = std::to_string(config.getBindPort());
     m_external_port = config.getExternalPort();
     m_allow_local_ip = config.getAllowLocalIp();
+    m_node_version = config.getRefuseOutdated();
 
     auto peers = config.getPeers();
     std::copy(peers.begin(), peers.end(), std::back_inserter(m_command_line_peers));
@@ -454,7 +457,10 @@ namespace CryptoNote
 
     for(auto& p: m_command_line_peers)
       m_peerlist.append_with_peer_white(p);
-    
+
+    if (!m_node_version.empty())
+      logger(INFO, BRIGHT_GREEN) << "[VERSION BLOCKING] Daemon Version: " << m_node_version << " - blocking daemons that do not reply with this specified version.";
+
     //only in case if we really sure that we have external visible ip
     m_have_address = true;
     m_ip_address = 0;
@@ -600,6 +606,14 @@ namespace CryptoNote
       return false;
     }
 
+  if(!m_node_version.empty()) {
+    if (rsp.node_data.node_version != m_node_version) {
+      logger(Logging::ERROR) << context << "COMMAND_HANDSHAKE: invoked, but peer is running an outdated daemon, dropping connection.";
+      return false;
+    }
+  }
+
+
     if (!handle_remote_peerlist(rsp.local_peerlist, rsp.node_data.local_time, context)) {
       logger(Logging::ERROR) << context << "COMMAND_HANDSHAKE: failed to handle_remote_peerlist(...), closing connection.";
       return false;
@@ -626,7 +640,7 @@ namespace CryptoNote
     return true;
   }
 
-  
+
   bool NodeServer::timedSync() {
     COMMAND_TIMED_SYNC::request arg = boost::value_initialized<COMMAND_TIMED_SYNC::request>();
     m_payload_handler.get_payload_sync_data(arg.payload_data);
@@ -684,6 +698,8 @@ namespace CryptoNote
 
   //----------------------------------------------------------------------------------- 
   bool NodeServer::is_peer_used(const PeerlistEntry& peer) {
+
+
     if(m_config.m_peer_id == peer.id)
       return true; //dont make connections to ourself
 
@@ -895,7 +911,6 @@ namespace CryptoNote
     return true;
   }
   //-----------------------------------------------------------------------------------
-  
   bool NodeServer::make_expected_connections_count(bool white_list, size_t expected_connections)
   {
     size_t conn_count = get_outgoing_connections_count();
@@ -978,6 +993,7 @@ namespace CryptoNote
       node_data.my_port = m_external_port ? m_external_port : m_listeningPort;
     else 
       node_data.my_port = 0;
+    node_data.node_version = m_node_version;
     node_data.network_id = m_network_id;
     return true;
   }
@@ -1232,7 +1248,6 @@ namespace CryptoNote
     return true;
   }
   //-----------------------------------------------------------------------------------
-  
   std::string NodeServer::print_connections_container() {
 
     std::stringstream ss;
@@ -1247,7 +1262,6 @@ namespace CryptoNote
     return ss.str();
   }
   //-----------------------------------------------------------------------------------
-  
   void NodeServer::on_connection_new(P2pConnectionContext& context)
   {
     logger(TRACE) << context << "NEW CONNECTION";
