@@ -1,7 +1,7 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2014-2017 XDN developers
 // Copyright (c) 2016-2017 BXC developers
-// Copyright (c) 2017 UltraNote developers
+// Copyright (c) 2017-2019 UltraNote developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,6 +14,7 @@
 #include "Common/StringTools.h"
 #include "crypto/crypto.h"
 #include "CryptoNoteConfig.h"
+#include "version.h"
 
 namespace CryptoNote {
 namespace {
@@ -28,7 +29,8 @@ const command_line::arg_descriptor<std::vector<std::string> > arg_p2p_add_exclus
       " If this option is given the options add-priority-node and seed-node are ignored"};
 const command_line::arg_descriptor<std::vector<std::string> > arg_p2p_seed_node   = {"seed-node", "Connect to a node to retrieve peer addresses, and disconnect"};
 const command_line::arg_descriptor<bool> arg_p2p_hide_my_port   =    {"hide-my-port", "Do not announce yourself as peerlist candidate", false, true};
-
+const command_line::arg_descriptor<std::string> arg_p2p_refuse_outdated = {"refuse-outdated", "Refuse connections from peers whose daemon version is below the specified version"};
+      
 bool parsePeerFromString(NetworkAddress& pe, const std::string& node_addr) {
   return Common::parseIpAddressAndPort(pe.ip, pe.port, node_addr);
 }
@@ -61,6 +63,7 @@ void NetNodeConfig::initOptions(boost::program_options::options_description& des
   command_line::add_arg(desc, arg_p2p_add_exclusive_node);
   command_line::add_arg(desc, arg_p2p_seed_node);
   command_line::add_arg(desc, arg_p2p_hide_my_port);
+  command_line::add_arg(desc, arg_p2p_refuse_outdated);
 }
 
 NetNodeConfig::NetNodeConfig() {
@@ -71,6 +74,7 @@ NetNodeConfig::NetNodeConfig() {
   hideMyPort = false;
   configFolder = Tools::getDefaultDataDirectory();
   testnet = false;
+  refuseOutdated = "";
 }
 
 bool NetNodeConfig::init(const boost::program_options::variables_map& vm)
@@ -94,7 +98,11 @@ bool NetNodeConfig::init(const boost::program_options::variables_map& vm)
   if (vm.count(command_line::arg_data_dir.name) != 0 && (!vm[command_line::arg_data_dir.name].defaulted() || configFolder == Tools::getDefaultDataDirectory())) {
     configFolder = command_line::get_arg(vm, command_line::arg_data_dir);
   }
-
+      
+if (vm.count(arg_p2p_refuse_outdated.name) != 0 && (!vm[arg_p2p_refuse_outdated.name].defaulted() || refuseOutdated.empty())) {
+    refuseOutdated = command_line::get_arg(vm, arg_p2p_refuse_outdated);
+  }
+      
   p2pStateFilename = CryptoNote::parameters::P2P_NET_DATA_FILENAME;
 
   if (command_line::has_arg(vm, arg_p2p_add_peer)) {
@@ -187,6 +195,10 @@ bool NetNodeConfig::getHideMyPort() const {
 std::string NetNodeConfig::getConfigFolder() const {
   return configFolder;
 }
+      
+std::string NetNodeConfig::getRefuseOutdated() const {
+  return refuseOutdated;
+}
 
 void NetNodeConfig::setP2pStateFilename(const std::string& filename) {
   p2pStateFilename = filename;
@@ -232,5 +244,8 @@ void NetNodeConfig::setConfigFolder(const std::string& folder) {
   configFolder = folder;
 }
 
-
+void NetNodeConfig::setRefuseOutdated(std::string& nodeVersion) {
+  refuseOutdated = nodeVersion;
+}
+      
 } //namespace nodetool
