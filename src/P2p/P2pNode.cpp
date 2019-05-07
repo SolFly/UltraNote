@@ -1,7 +1,7 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2014-2017 XDN developers
 // Copyright (c) 2016-2017 BXC developers
-// Copyright (c) 2017 UltraNote developers
+// Copyright (c) 2017-2019 UltraNote developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -444,6 +444,7 @@ basic_node_data P2pNode::getNodeData() const {
   nodeData.version = P2PProtocolVersion::CURRENT;
   nodeData.local_time = time(nullptr);
   nodeData.peer_id = m_myPeerId;
+  nodeData.node_version = PROJECT_VERSION;
 
   if (m_cfg.getHideMyPort()) {
     nodeData.my_port = 0;
