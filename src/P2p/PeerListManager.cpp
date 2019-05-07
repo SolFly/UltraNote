@@ -144,6 +144,32 @@ bool PeerlistManager::is_ip_allowed(uint32_t ip) const
 }
 //--------------------------------------------------------------------------------------------------
 
+/*
+bool PeerlistManager::is_compatible_version(std::string& node_version) const
+{
+  uint8_t byte1,byte2,byte3;
+  std::vector<uint8_t> as_bytes = { byte1, byte2, byte3 };
+  if (node_version.length() == 6) {
+    if(node_version.substr(2,1) == ".") {
+      byte1 == Common::fromString<uint8_t>(node_version.substr(1,1));
+      if(node_version.substr(3,1) == ".") {
+        byte2 == Common::fromString<uint8_t>(node_version.substr(2,1));
+        byte3 == Common::fromString<uint8_t>(node_version.substr(5,2));
+      }
+    }
+  bool substring_too_high = ((byte1 > 9) || (byte2 > 9)) || (byte3 > 20);
+  if (substring_too_high)
+    return false;
+   if (byte3 >= 0xD)
+    return true;
+  else
+   return false;
+  if(!m_refuse_outdated)
+   return true;
+}
+*/
+//--------------------------------------------------------------------------------------------------
+
 bool PeerlistManager::get_peerlist_head(std::list<PeerlistEntry>& bs_head, uint32_t depth) const
 {
   const peers_indexed::index<by_time>::type& by_time_index = m_peers_white.get<by_time>();
