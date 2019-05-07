@@ -1,7 +1,7 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2014-2017 XDN developers
 // Copyright (c) 2016-2017 BXC developers
-// Copyright (c) 2017 UltraNote developers
+// Copyright (c) 2017-2019 UltraNote developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,7 +26,7 @@ class ISerializer;
 class PeerlistManager {
   struct by_time{};
   struct by_id{};
-  struct by_addr{};
+  struct by_addr{};\
 
   typedef boost::multi_index_container<
     PeerlistEntry,
@@ -68,6 +68,7 @@ public:
   bool set_peer_just_seen(PeerIdType peer, const NetworkAddress& addr);
   bool set_peer_unreachable(const PeerlistEntry& pr);
   bool is_ip_allowed(uint32_t ip) const;
+  bool is_compatible_version(std::string& node_version) const;
   void trim_white_peerlist();
   void trim_gray_peerlist();
 
@@ -78,6 +79,7 @@ public:
 
 private:
   std::string m_config_folder;
+  const std::string m_node_version;
   bool m_allow_local_ip;
   peers_indexed m_peers_gray;
   peers_indexed m_peers_white;
