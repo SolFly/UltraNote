@@ -1,7 +1,7 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2014-2017 XDN developers
 // Copyright (c) 2016-2017 BXC developers
-// Copyright (c) 2017 UltraNote developers
+// Copyright (c) 2017-2019 UltraNote developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,6 +32,8 @@
 #include "P2pProtocolDefinitions.h"
 #include "P2pNetworks.h"
 #include "PeerListManager.h"
+
+#include "version.h"
 
 namespace System {
 class TcpConnection;
@@ -230,6 +232,7 @@ namespace CryptoNote
     bool m_allow_local_ip;
     bool m_hide_my_port;
     std::string m_p2p_state_filename;
+    std::string m_node_version;
 
     System::Dispatcher& m_dispatcher;
     System::ContextGroup m_workingContextGroup;
