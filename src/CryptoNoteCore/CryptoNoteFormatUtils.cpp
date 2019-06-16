@@ -88,7 +88,7 @@ bool constructTransaction(
   tx.outputs.clear();
   tx.signatures.clear();
   
-  tx.version = transaction::version_2;
+  tx.version = TRANSACTION_VERSION_2;
   tx.unlockTime = unlock_time;
 
   tx.extra = extra;
